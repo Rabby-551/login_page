@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:login_page/snack_bar_message.dart';
+import 'package:login_page/task_scree.dart';
+import 'package:login_page/data/models/network_response.dart';
+import 'package:login_page/data/services/network_caller.dart';
+import 'package:login_page/data/utils/urls.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,7 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<FormState> _formkey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _inProgress = false;
+  bool _inprogress = false;
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       )),
                   onPressed: () {
                     if (_formkey.currentState!.validate()) {
-                      return;
+                      _login();
                     }
                   },
                   child: const Text(
@@ -124,6 +129,33 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+
     );
   }
-}
+  // API Call
+  Future<void> _login() async {
+    _inprogress = true;
+    setState(() {});
+
+    Map<String, dynamic> requestBody = {
+      'email': _emailController.text.trim(),
+      'password': _passwordController.text,
+    };
+    final NetworkResponse response = await NetworkCaller.postRequest(
+      url: Urls.login,
+      body: requestBody,
+    );
+    _inprogress = false;
+    setState(() { });
+    if(response.isSuccess){
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const TaskScreen()),
+            (value) => false,
+      );
+    } else{
+      showSnackBarMessage(context, response.errorMessage, true);
+    }
+
+  }
+
